@@ -49,6 +49,10 @@ body[data-view="linear"] #view-year{display:none}
 .wk-dates{flex:1;min-width:0}
 .wk-range{font-weight:560;font-size:15px}
 .wk-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.days7{display:flex;align-items:center;gap:3px;margin-top:8px;max-width:236px}
+.days7 i{flex:1;height:7px;border-radius:3px;background:#e8e1d5}              /* будущий день */
+.days7 i.done{background:#cdbfa9}                                            /* пройденный */
+.days7 i.today{height:12px;background:var(--accent);box-shadow:0 0 0 2px #fff,0 1px 4px rgba(194,91,70,.5)}
 .wk-badge{display:flex;align-items:center;gap:8px;flex-shrink:0;text-align:right}
 .z-pre{border-left-color:#cfc6b4}
 .z-early{border-left-color:#9cc787;background:#fbfdf8}
@@ -106,7 +110,7 @@ body[data-view="linear"] #view-year{display:none}
 }
 </style>
 </head>
-<body data-view="year">
+<body data-view="linear">
 <div class="wrap">
   <header class="head">
     <p class="kicker" id="kicker"></p>
@@ -116,8 +120,8 @@ body[data-view="linear"] #view-year{display:none}
   </header>
 
   <div class="switch">
-    <button data-v="year" class="on">Год</button>
-    <button data-v="linear">Линейный</button>
+    <button data-v="linear" class="on">Линейный</button>
+    <button data-v="year">Год</button>
   </div>
 
   <section id="view-year"><div class="months" id="months"></div></section>
@@ -242,11 +246,18 @@ document.getElementById('foot').textContent =
     else if(w===42) badge='<span class="mile mile-post">переношенность</span>';
     const here = isToday ? '<span class="here">← вы здесь</span>' : '';
     const yr = start.getFullYear()===end.getFullYear() ? start.getFullYear() : '';
+    let seg = '';
+    for(let k=0; k<7; k++){
+      const sd = addDays(start, k), t = sd.getTime();
+      const st = t < today.getTime() ? 'done' : (t === today.getTime() ? 'today' : 'future');
+      seg += `<i class="${st}" title="${fShort(sd)} · ${WD[isoMonday(sd)]}"></i>`;
+    }
     html += `<div class="wk ${termClass(w)}${isToday?' is-today':''}">
       <div class="wk-num"><b>${w}</b><small>нед</small></div>
       <div class="wk-dates">
         <div class="wk-range">${fShort(start)} — ${fShort(end)} ${yr}</div>
         <div class="wk-sub">${WD[isoMonday(start)]}–${WD[isoMonday(end)]} · GA ${w} нед 0–6 дн</div>
+        <div class="days7">${seg}</div>
       </div>
       <div class="wk-badge">${badge}${here}</div></div>`;
   }
