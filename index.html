@@ -53,6 +53,12 @@ body[data-view="linear"] #view-year{display:none}
 .days7 i{flex:1;height:7px;border-radius:3px;background:#e8e1d5}              /* будущий день */
 .days7 i.done{background:#cdbfa9}                                            /* пройденный */
 .days7 i.today{height:12px;background:var(--accent);box-shadow:0 0 0 2px #fff,0 1px 4px rgba(194,91,70,.5)}
+.countdown{display:flex;gap:10px;flex-wrap:wrap;max-width:760px;margin:0 0 12px}
+.cd{flex:1;min-width:150px;background:#fff6f3;border:1px solid #f0d3ca;border-radius:12px;padding:10px 14px}
+.cd .n{font-size:23px;font-weight:680;color:var(--accent);letter-spacing:-.02em;line-height:1.1}
+.cd .n small{font-size:13px;font-weight:600;margin-left:3px}
+.cd .l{font-size:11.5px;color:#a8786c;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.cd .sub{font-size:11.5px;color:var(--muted);margin-top:1px}
 .wk-badge{display:flex;align-items:center;gap:8px;flex-shrink:0;text-align:right}
 .z-pre{border-left-color:#cfc6b4}
 .z-early{border-left-color:#9cc787;background:#fbfdf8}
@@ -135,8 +141,6 @@ body[data-view="linear"] #view-year{display:none}
       <li><span class="sw" style="background:#fbf2e4;border:1px solid #ecdcbd"></span> III триместр · 28–36 нед</li>
       <li><span class="sw" style="background:#e3f0da"></span> 37–38 нед — ранний срок</li>
       <li><span class="sw" style="background:#cfead4"></span> 39–40 нед — <b>полный срок</b></li>
-      <li><span class="sw" style="background:#f8e7c8"></span> 41 нед — поздний срок</li>
-      <li><span class="sw" style="background:#f6d8cd"></span> 42+ нед — переношенность</li>
       <li><span class="sw" style="background:#fff;box-shadow:inset 0 0 0 2px #c25b46"></span> сегодня · цифра в углу = № недели</li>
     </ul>
     <p class="note" id="note"></p>
@@ -171,7 +175,7 @@ const LMP = D(...CFG.lmp);
 const CONCEPTION = D(...CFG.conception);
 const EDD = addDays(LMP, 280);                              // ПДР = 40 нед 0 дн
 const at = weeks => addDays(LMP, weeks*7);
-const termDate = at(37), postDate = at(42);
+const termDate = at(37);
 
 const now = new Date();
 const today = D(now.getFullYear(), now.getMonth()+1, now.getDate());
@@ -186,7 +190,7 @@ function termClass(w){
 function triOf(w){ return w<=13?'I':(w<=27?'II':'III'); }
 function dayZone(dt){
   const gd = diffDays(LMP, dt);
-  if(gd<0 || gd>=43*7) return null;
+  if(gd<0 || gd>=41*7) return null;
   const w = Math.floor(gd/7);
   if(w<=13) return 'c-t1'; if(w<=27) return 'c-t2'; if(w<37) return 'c-t3';
   if(w<=38) return 'c-early'; if(w<=40) return 'c-full'; if(w===41) return 'c-late'; return 'c-post';
@@ -202,7 +206,6 @@ const events = [
   [at(37),         '★ Доношенность — роды в срок',   '#2f7a44'],
   [at(39),         'Полный срок',                    '#3f9a55'],
   [EDD,            'ПДР · 40 нед',                   '#23201c'],
-  [at(42),         'Переношенность',                 '#c0533a'],
 ];
 const evMap = {};
 for(const [dt,lb,c] of events){ evMap[dt.toDateString()] = [lb,c]; }
@@ -220,14 +223,25 @@ document.getElementById('facts').innerHTML = `
 document.getElementById('note').innerHTML =
   `«Срок доношенности» начинается в <b>37 нед 0 дн (${fFull(termDate)})</b> — с этого дня роды считаются срочными, ` +
   `ребёнок доношен. ПДР ${fFull(EDD)} = <b>40 нед 0 дн</b> — точечная оценка; ровно в ПДР рождаются ~4%, ` +
-  `физиологическая норма — окно 37–42 нед. Переношенность с ${fFull(postDate)}.`;
+  `доношенными считаются роды начиная с 37 нед.`;
 document.getElementById('foot').textContent =
   `Открыто ${fFull(today)} · пересчитывается автоматически · цифры в углу дней = завершённые акушерские недели`;
 
 // ─── Линейный вид ───────────────────────────────────────────────
 (function(){
+  const cdItem = (target, label, wk) => {
+    const d = diffDays(today, target);
+    const n = d > 0 ? `${d}<small>дн</small>` : '✓';
+    const ll = d > 0 ? label : label + ' — есть';
+    return `<div class="cd"><div class="n">${n}</div><div class="l">${ll}</div><div class="sub">${wk} · ${fShort(target)}</div></div>`;
+  };
+  const countdownHtml = `<div class="countdown">`
+    + cdItem(at(37), 'до доношенности', '37 нед')
+    + cdItem(at(39), 'до полного срока', '39 нед')
+    + cdItem(EDD,    'до ПДР',          '40 нед')
+    + `</div>`;
   let html = '', prevTri = null;
-  for(let w=4; w<=42; w++){
+  for(let w=4; w<=40; w++){
     const start = at(w), end = addDays(start,6), tri = triOf(w);
     if(tri!==prevTri){
       const nm = {I:'I триместр',II:'II триместр',III:'III триместр'}[tri];
@@ -260,13 +274,14 @@ document.getElementById('foot').textContent =
         <div class="days7">${seg}</div>
       </div>
       <div class="wk-badge">${badge}${here}</div></div>`;
+    if(isToday) html += countdownHtml;
   }
   document.getElementById('view-linear').innerHTML = html;
 })();
 
 // ─── Годовой вид ────────────────────────────────────────────────
 (function(){
-  const start = at(0), end = at(42);
+  const start = at(0), end = at(40);
   const span = [];
   let y=start.getFullYear(), m=start.getMonth()+1;
   while(y<end.getFullYear() || (y===end.getFullYear() && m<=end.getMonth()+1)){
@@ -284,7 +299,7 @@ document.getElementById('foot').textContent =
       let cls=['day'], style='', inner=`<span class="dn">${dd}</span>`;
       const z=dayZone(dt); if(z) cls.push(z);
       const gd=diffDays(LMP,dt);
-      if(gd>=7 && gd%7===0 && gd<=42*7) inner+=`<span class="wkb">${gd/7}</span>`;
+      if(gd>=7 && gd%7===0 && gd<=40*7) inner+=`<span class="wkb">${gd/7}</span>`;
       const ev = evMap[dt.toDateString()];
       if(ev){ cls.push('ev'); style=` style="--ring:${ev[1]}"`; inner+='<span class="dot"></span>'; mev.push([dd,ev[0],ev[1]]); }
       if(dt.getTime()===today.getTime()){ cls.push('today'); inner+='<span class="dot dot-now"></span>'; if(!ev) mev.push([dd,'Сегодня','#c25b46']); }
