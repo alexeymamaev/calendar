@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Календарь беременности</title>
+<style>
+:root{
+  --bg:#f6f4f0; --card:#fffefb; --ink:#23201c; --muted:#8c857a; --line:#ece7df;
+  --t1:#7fb3a0; --t2:#6aa0c0; --t3:#d9a05b; --accent:#c25b46;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;padding:32px 18px 64px}
+.wrap{max-width:1040px;margin:0 auto}
+header.head{margin:0 0 22px;max-width:760px}
+.kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.15;margin:0 0 4px;font-weight:650;letter-spacing:-.01em}
+.h-sub{color:var(--muted);margin:0 0 18px}
+.facts{display:flex;flex-wrap:wrap;gap:10px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:120px}
+.fact .l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.fact .v{font-size:16px;font-weight:600;margin-top:2px}
+.fact.now{border-color:var(--accent);background:#fff6f3}
+.fact.now .v{color:var(--accent)}
+.fact.term .v{color:#3f7a4c}
+
+.switch{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);
+  border-radius:24px;padding:4px;margin:22px 0 18px}
+.switch button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;
+  font-size:14px;padding:7px 18px;border-radius:20px;cursor:pointer}
+.switch button.on{background:var(--ink);color:#fff}
+body[data-view="year"] #view-linear{display:none}
+body[data-view="linear"] #view-year{display:none}
+
+.tri-sep{display:flex;align-items:baseline;gap:10px;margin:22px 0 8px;padding-left:2px;max-width:760px}
+.tri-sep span{font-weight:650;font-size:15px}
+.tri-sep em{color:var(--muted);font-style:normal;font-size:12.5px}
+.tri-sep::after{content:"";flex:1;height:1px;background:var(--line);margin-left:6px}
+.tri-I span{color:var(--t1)} .tri-II span{color:var(--t2)} .tri-III span{color:var(--t3)}
+.wk{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+  border-left:5px solid var(--line);border-radius:12px;padding:9px 14px;margin:6px 0;max-width:760px}
+.wk-num{display:flex;align-items:baseline;gap:3px;min-width:54px}
+.wk-num b{font-size:21px;font-weight:680;letter-spacing:-.02em}
+.wk-num small{font-size:11px;color:var(--muted)}
+.wk-dates{flex:1;min-width:0}
+.wk-range{font-weight:560;font-size:15px}
+.wk-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.wk-badge{display:flex;align-items:center;gap:8px;flex-shrink:0;text-align:right}
+.z-pre{border-left-color:#cfc6b4}
+.z-early{border-left-color:#9cc787;background:#fbfdf8}
+.z-full{border-left-color:#5cb872;background:#f4fbf3}
+.z-late{border-left-color:#e2a24c;background:#fefaf3}
+.z-post{border-left-color:#d4775e;background:#fdf5f2}
+.wk.is-today{border-color:var(--accent);border-left-color:var(--accent);
+  box-shadow:0 6px 22px -10px rgba(194,91,70,.45);background:#fff6f3}
+.wk.is-today .wk-num b{color:var(--accent)}
+.here{background:var(--accent);color:#fff;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.mile{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.mile-soft{background:#eef0ec;color:#6b7166}
+.mile-term{background:#2f7a44;color:#fff}
+.mile-full{background:#dff2e2;color:#2f7a44}
+.mile-edd{background:#23201c;color:#fff}
+.mile-late{background:#f5e3c4;color:#9a6a1f}
+.mile-post{background:#f5d8cf;color:#9c3d27}
+
+#view-year .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:18px}
+.month{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 14px 12px}
+.month h3{margin:0 0 10px;font-size:16px;font-weight:650}
+.month h3 span{color:var(--muted);font-weight:500;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dh{text-align:center;font-size:10px;color:var(--muted);padding-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.day{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;font-size:12.5px;color:var(--ink)}
+.day.blank{background:transparent}
+.dn{position:relative;z-index:1}
+.wkb{position:absolute;top:1px;right:3px;font-size:8.5px;font-weight:700;color:#b6ab98;z-index:1}
+.dot{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--ring);z-index:1}
+.dot-now{background:var(--accent)}
+.day.ev{box-shadow:inset 0 0 0 1.5px var(--ring);font-weight:700}
+.day.today{box-shadow:inset 0 0 0 2px var(--accent);font-weight:800;color:var(--accent)}
+.c-t1{background:#eef5f1}.c-t2{background:#eaf2f8}.c-t3{background:#fbf2e4}
+.c-early{background:#e3f0da}.c-full{background:#cfead4}.c-late{background:#f8e7c8}.c-post{background:#f6d8cd}
+.mev{list-style:none;margin:11px 0 0;padding:10px 0 0;border-top:1px solid var(--line);font-size:12px}
+.mev li{display:flex;align-items:center;gap:7px;padding:2px 0;color:#5d564c}
+.mev b{min-width:18px;color:var(--ink)}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.legend{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;max-width:760px}
+.legend h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.legend ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px 22px}
+.legend li{display:flex;align-items:center;gap:9px;font-size:13.5px}
+.sw{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.note{margin-top:18px;font-size:12.5px;color:var(--muted);line-height:1.6;max-width:760px}
+.foot{margin-top:20px;font-size:12px;color:var(--muted);text-align:center}
+
+@media (max-width:560px){.legend ul{grid-template-columns:1fr}.wk-badge{display:none}h1{font-size:25px}}
+@media print{
+  body{background:#fff;padding:0}.switch{display:none}
+  body[data-view="year"] #view-linear,body[data-view="linear"] #view-year{display:block}
+  .wk,.fact,.legend,.month{box-shadow:none}
+  #view-year .months{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body data-view="year">
+<div class="wrap">
+  <header class="head">
+    <p class="kicker" id="kicker"></p>
+    <h1 id="title">Календарь беременности</h1>
+    <p class="h-sub" id="subtitle"></p>
+    <div class="facts" id="facts"></div>
+  </header>
+
+  <div class="switch">
+    <button data-v="year" class="on">Год</button>
+    <button data-v="linear">Линейный</button>
+  </div>
+
+  <section id="view-year"><div class="months" id="months"></div></section>
+  <section id="view-linear"></section>
+
+  <div class="legend">
+    <h2>Триместры и зоны доношенности (ВОЗ / ACOG)</h2>
+    <ul>
+      <li><span class="sw" style="background:#eef5f1;border:1px solid #cfe0d8"></span> I триместр · 1–13 нед</li>
+      <li><span class="sw" style="background:#eaf2f8;border:1px solid #cfe0ec"></span> II триместр · 14–27 нед</li>
+      <li><span class="sw" style="background:#fbf2e4;border:1px solid #ecdcbd"></span> III триместр · 28–36 нед</li>
+      <li><span class="sw" style="background:#e3f0da"></span> 37–38 нед — ранний срок</li>
+      <li><span class="sw" style="background:#cfead4"></span> 39–40 нед — <b>полный срок</b></li>
+      <li><span class="sw" style="background:#f8e7c8"></span> 41 нед — поздний срок</li>
+      <li><span class="sw" style="background:#f6d8cd"></span> 42+ нед — переношенность</li>
+      <li><span class="sw" style="background:#fff;box-shadow:inset 0 0 0 2px #c25b46"></span> сегодня · цифра в углу = № недели</li>
+    </ul>
+    <p class="note" id="note"></p>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+// ─── Конфигурация: единственное, что нужно менять ───────────────
+const CFG = {
+  lmp:        [2025, 11, 2],   // 1-й день последней менструации (акушерский старт) = зачатие − 14 дн
+  conception: [2025, 11, 16],
+  showName:   false,
+  name:       ''
+};
+
+// ─── Утилиты дат ────────────────────────────────────────────────
+const MA = ['','янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const MG = ['','января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MN = ['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WD = ['пн','вт','ср','чт','пт','сб','вс'];           // Пн-первый
+const D = (y,m,d)=>new Date(y, m-1, d);
+const addDays = (dt,n)=>{const t=new Date(dt);t.setDate(t.getDate()+n);return t;};
+const diffDays = (a,b)=>Math.round((b-a)/86400000);
+const isoMonday = dt=>(dt.getDay()+6)%7;                    // Пн=0 … Вс=6
+const fShort = dt=>`${dt.getDate()} ${MA[dt.getMonth()+1]}`;
+const fFull  = dt=>`${dt.getDate()} ${MG[dt.getMonth()+1]} ${dt.getFullYear()}`;
+const gad = days=>{const w=Math.floor(days/7), d=days%7; return `${w} нед ${d} дн`;};
+
+const LMP = D(...CFG.lmp);
+const CONCEPTION = D(...CFG.conception);
+const EDD = addDays(LMP, 280);                              // ПДР = 40 нед 0 дн
+const at = weeks => addDays(LMP, weeks*7);
+const termDate = at(37), postDate = at(42);
+
+const now = new Date();
+const today = D(now.getFullYear(), now.getMonth()+1, now.getDate());
+const gaDays = diffDays(LMP, today);
+const gaW = Math.floor(gaDays/7);
+
+// ─── Зоны ───────────────────────────────────────────────────────
+function termClass(w){
+  if(w<37) return 'z-pre'; if(w<=38) return 'z-early';
+  if(w<=40) return 'z-full'; if(w===41) return 'z-late'; return 'z-post';
+}
+function triOf(w){ return w<=13?'I':(w<=27?'II':'III'); }
+function dayZone(dt){
+  const gd = diffDays(LMP, dt);
+  if(gd<0 || gd>=43*7) return null;
+  const w = Math.floor(gd/7);
+  if(w<=13) return 'c-t1'; if(w<=27) return 'c-t2'; if(w<37) return 'c-t3';
+  if(w<=38) return 'c-early'; if(w<=40) return 'c-full'; if(w===41) return 'c-late'; return 'c-post';
+}
+
+// ─── Важные даты ────────────────────────────────────────────────
+const events = [
+  [LMP,            'Старт отсчёта (1-й день)',       '#9a8f7e'],
+  [CONCEPTION,     'Зачатие',                        '#c98aa8'],
+  [at(14),         'II триместр',                    '#6aa0c0'],
+  [at(24),         'Порог жизнеспособности',         '#9a8f7e'],
+  [at(28),         'III триместр',                   '#d9a05b'],
+  [at(37),         '★ Доношенность — роды в срок',   '#2f7a44'],
+  [at(39),         'Полный срок',                    '#3f9a55'],
+  [EDD,            'ПДР · 40 нед',                   '#23201c'],
+  [at(42),         'Переношенность',                 '#c0533a'],
+];
+const evMap = {};
+for(const [dt,lb,c] of events){ evMap[dt.toDateString()] = [lb,c]; }
+
+// ─── Шапка ──────────────────────────────────────────────────────
+document.getElementById('title').textContent =
+  'Календарь беременности' + (CFG.showName ? ' · ' + CFG.name : '');
+document.getElementById('subtitle').textContent =
+  `Акушерский срок (от 1-го дня последней менструации). Зачатие ${fFull(CONCEPTION)}.`;
+document.getElementById('facts').innerHTML = `
+  <div class="fact"><div class="l">Старт отсчёта</div><div class="v">${fFull(LMP)}</div></div>
+  <div class="fact now"><div class="l">Сегодня</div><div class="v">${gad(gaDays)}</div></div>
+  <div class="fact term"><div class="l">Доношенность с</div><div class="v">${fFull(termDate)} · 37 нед</div></div>
+  <div class="fact"><div class="l">ПДР · 40 нед</div><div class="v">${fFull(EDD)}</div></div>`;
+document.getElementById('note').innerHTML =
+  `«Срок доношенности» начинается в <b>37 нед 0 дн (${fFull(termDate)})</b> — с этого дня роды считаются срочными, ` +
+  `ребёнок доношен. ПДР ${fFull(EDD)} = <b>40 нед 0 дн</b> — точечная оценка; ровно в ПДР рождаются ~4%, ` +
+  `физиологическая норма — окно 37–42 нед. Переношенность с ${fFull(postDate)}.`;
+document.getElementById('foot').textContent =
+  `Открыто ${fFull(today)} · пересчитывается автоматически · цифры в углу дней = завершённые акушерские недели`;
+
+// ─── Линейный вид ───────────────────────────────────────────────
+(function(){
+  let html = '', prevTri = null;
+  for(let w=4; w<=42; w++){
+    const start = at(w), end = addDays(start,6), tri = triOf(w);
+    if(tri!==prevTri){
+      const nm = {I:'I триместр',II:'II триместр',III:'III триместр'}[tri];
+      const rg = {I:'1–13 недель',II:'14–27 недель',III:'28+ недель'}[tri];
+      html += `<div class="tri-sep tri-${tri}"><span>${nm}</span><em>${rg}</em></div>`;
+      prevTri = tri;
+    }
+    const isToday = (w===gaW);
+    let badge='';
+    if(w===24) badge='<span class="mile mile-soft">порог жизнеспособности</span>';
+    else if(w===28) badge='<span class="mile mile-soft">начало III триместра</span>';
+    else if(w===37) badge='<span class="mile mile-term">★ ДОНОШЕННОСТЬ — роды в срок</span>';
+    else if(w===39) badge='<span class="mile mile-full">полный срок</span>';
+    else if(w===40) badge='<span class="mile mile-edd">ПДР — 40 нед 0 дн</span>';
+    else if(w===41) badge='<span class="mile mile-late">поздний срок</span>';
+    else if(w===42) badge='<span class="mile mile-post">переношенность</span>';
+    const here = isToday ? '<span class="here">← вы здесь</span>' : '';
+    const yr = start.getFullYear()===end.getFullYear() ? start.getFullYear() : '';
+    html += `<div class="wk ${termClass(w)}${isToday?' is-today':''}">
+      <div class="wk-num"><b>${w}</b><small>нед</small></div>
+      <div class="wk-dates">
+        <div class="wk-range">${fShort(start)} — ${fShort(end)} ${yr}</div>
+        <div class="wk-sub">${WD[isoMonday(start)]}–${WD[isoMonday(end)]} · GA ${w} нед 0–6 дн</div>
+      </div>
+      <div class="wk-badge">${badge}${here}</div></div>`;
+  }
+  document.getElementById('view-linear').innerHTML = html;
+})();
+
+// ─── Годовой вид ────────────────────────────────────────────────
+(function(){
+  const start = at(0), end = at(42);
+  const span = [];
+  let y=start.getFullYear(), m=start.getMonth()+1;
+  while(y<end.getFullYear() || (y===end.getFullYear() && m<=end.getMonth()+1)){
+    span.push([y,m]); m++; if(m>12){m=1;y++;}
+  }
+  let html='';
+  for(const [yy,mm] of span){
+    const firstWd = isoMonday(D(yy,mm,1));
+    const ndays = new Date(yy,mm,0).getDate();
+    let cells = WD.map(d=>`<div class="dh">${d}</div>`).join('');
+    for(let i=0;i<firstWd;i++) cells += '<div class="day blank"></div>';
+    const mev=[];
+    for(let dd=1; dd<=ndays; dd++){
+      const dt = D(yy,mm,dd);
+      let cls=['day'], style='', inner=`<span class="dn">${dd}</span>`;
+      const z=dayZone(dt); if(z) cls.push(z);
+      const gd=diffDays(LMP,dt);
+      if(gd>=7 && gd%7===0 && gd<=42*7) inner+=`<span class="wkb">${gd/7}</span>`;
+      const ev = evMap[dt.toDateString()];
+      if(ev){ cls.push('ev'); style=` style="--ring:${ev[1]}"`; inner+='<span class="dot"></span>'; mev.push([dd,ev[0],ev[1]]); }
+      if(dt.getTime()===today.getTime()){ cls.push('today'); inner+='<span class="dot dot-now"></span>'; if(!ev) mev.push([dd,'Сегодня','#c25b46']); }
+      cells += `<div class="${cls.join(' ')}"${style}>${inner}</div>`;
+    }
+    let evHtml='';
+    if(mev.length){
+      mev.sort((a,b)=>a[0]-b[0]);
+      evHtml = '<ul class="mev">'+mev.map(([dd,lb,c])=>
+        `<li><span class="ldot" style="background:${c}"></span><b>${dd}</b> — ${lb}</li>`).join('')+'</ul>';
+    }
+    html += `<div class="month"><h3>${MN[mm]} <span>${yy}</span></h3><div class="grid">${cells}</div>${evHtml}</div>`;
+  }
+  document.getElementById('months').innerHTML = html;
+})();
+
+// ─── Переключатель ──────────────────────────────────────────────
+const btns = document.querySelectorAll('.switch button');
+btns.forEach(x=>x.addEventListener('click',()=>{
+  document.body.dataset.view = x.dataset.v;
+  btns.forEach(y=>y.classList.toggle('on', y===x));
+}));
+</script>
+</body>
+</html>
